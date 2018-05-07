@@ -5,7 +5,7 @@ import os
 import tempfile
 import Default
 
-class RunGroovyCommand(sublime_plugin.WindowCommand):
+class RunGroovyServerCommand(sublime_plugin.WindowCommand):
     def run(self):
         window = sublime.active_window()
         view = window.active_view() if window else None
@@ -13,13 +13,13 @@ class RunGroovyCommand(sublime_plugin.WindowCommand):
         cwd = os.path.dirname(file_name) if file_name else os.getcwd()
         encoding = view.encoding() if str(view.encoding()) != 'Undefined' else 'UTF-8'
 
-        window.run_command('exec_run_groovy', {
+        window.run_command('exec_run_groovy_server', {
             'file_name': file_name,
             'encoding': encoding,
             'working_dir': cwd
         })
 
-class ExecRunGroovyCommand(Default.exec.ExecCommand):
+class ExecRunGroovyServerCommand(Default.exec.ExecCommand):
     view = None
     temp_file = None
     temp_dir = tempfile.gettempdir()

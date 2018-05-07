@@ -1,0 +1,13 @@
+[
+    {
+        "caption": "RunGroovyServer: Run current script",
+        "command": "run_groovy_server"
+    },
+    {
+        "caption": "RunGroovyServer: Run current paragraph",
+        "command": "run_groovy_server",
+        "args": {
+            "current": true
+        }
+    }
+]

@@ -1,0 +1,4 @@
+[
+	{ "keys": ["shift+enter"], "command": "run_groovy_server", "args": {"current": true} },
+	{ "keys": ["ctrl+r"], "command": "run_groovy_server" }
+]
