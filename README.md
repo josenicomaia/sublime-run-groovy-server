@@ -5,6 +5,6 @@ Run scripts on GroovyServ
 ```json
 {
 	{ "keys": ["shift+enter"], "command": "run_groovy", "args": {"current": true} },
-	{ "keys": ["ctrl+r"], "command": "run_groovy" },
+	{ "keys": ["ctrl+r"], "command": "run_groovy" }
 }
 ```
