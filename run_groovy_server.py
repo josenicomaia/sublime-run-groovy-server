@@ -4,37 +4,60 @@ import subprocess
 import os
 import tempfile
 import Default
+from Default.paragraph import expand_to_paragraph
 
-class RunGroovyServerCommand(sublime_plugin.WindowCommand):
-    def run(self):
+class RunGroovyCommand(sublime_plugin.WindowCommand):
+    def run(self, current=False):
         window = sublime.active_window()
         view = window.active_view() if window else None
         file_name = view.file_name() if view else None
         cwd = os.path.dirname(file_name) if file_name else os.getcwd()
         encoding = view.encoding() if str(view.encoding()) != 'Undefined' else 'UTF-8'
 
-        window.run_command('exec_run_groovy_server', {
-            'file_name': file_name,
-            'encoding': encoding,
-            'working_dir': cwd
+        window.run_command('exec_run_groovy', {
+            'working_dir': cwd,
+            'current': current,
+            'encoding': encoding
         })
 
-class ExecRunGroovyServerCommand(Default.exec.ExecCommand):
+class ExecRunGroovyCommand(Default.exec.ExecCommand):
     view = None
     temp_file = None
-    temp_dir = tempfile.gettempdir()
 
-    def run(self, file_name=None, working_dir='', encoding='UTF-8'):
+    def run(self, working_dir='', current=False, encoding='UTF-8'):
         self.view = sublime.active_window().active_view()
+        self.temp_file = self.__generate_temp_file()
 
-        if self.__is_selection_available():
-            self.temp_file = self.__copy_selection_to_temp(working_dir, encoding)
-            file_name = self.temp_file.name
-        elif self.__is_scratch_file():
-            self.temp_file = self.__copy_buffer_to_temp(working_dir, encoding)
-            file_name = self.temp_file.name
+        if current:
+            contents = self.__get_current_paragraph_contents()
+        elif self.__is_selection_available():
+            contents = self.__get_selection_contents()
+        else:
+            contents = self.__get_buffer_contents()
 
-        super().run(cmd=["groovyclient", file_name], encoding=encoding, working_dir=working_dir)
+        self.temp_file.write(bytes(contents, encoding))
+        self.temp_file.close()
+        super().run(cmd=["groovyclient", self.temp_file.name], encoding=encoding, working_dir=working_dir)
+
+    def __generate_temp_file(self):
+        return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=tempfile.gettempdir(), delete=False)
+
+    def __get_current_paragraph_contents(self):
+        paragraphs = []
+
+        if self.view.sel():
+            for region in self.view.sel():
+                paragraphs.append([region, expand_to_paragraph(self.view, region.b)])
+
+        text = []
+
+        for i in paragraphs:
+            region, paragraph = i
+            self.view.sel().subtract(region)
+            self.view.sel().add(paragraph)
+            text.append(self.view.substr(paragraph))
+
+        return '\n\n'.join(text)
 
     def __is_selection_available(self):
         if self.view.sel():
@@ -44,40 +67,18 @@ class ExecRunGroovyServerCommand(Default.exec.ExecCommand):
 
         return False
 
-    def __is_scratch_file(self):
-        return False if self.view.file_name() else True
-
-    def __copy_selection_to_temp(self, working_dir, encoding):
-        file = self.__generate_temp_file(working_dir)
-        contents = self.__get_selection_content(self.view)
-        file.write(bytes(contents, encoding))
-        file.close()
-
-        return file
-
-    def __generate_temp_file(self, working_dir):
-    	try:
-        	return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=working_dir, delete=False)
-    	except PermissionError:
-    		return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=self.temp_dir, delete=False)
-
-    def __get_selection_content(self, view):
+    def __get_selection_contents(self):
         text = []
 
-        if view.sel():
-            for region in view.sel():
+        if self.view.sel():
+            for region in self.view.sel():
                 if not region.empty():
-                    text.append(view.substr(region))
+                    text.append(self.view.substr(region))
 
-        return ''.join(text)
+        return '\n\n'.join(text)
 
-    def __copy_buffer_to_temp(self, working_dir, encoding):
-        file = self.__generate_temp_file(working_dir)
-        contents = self.view.substr(sublime.Region(0, self.view.size()))
-        file.write(bytes(contents, encoding))
-        file.close()
-
-        return file
+    def __get_buffer_contents(self):
+        return self.view.substr(sublime.Region(0, self.view.size()))
 
     def on_finished(self, proc):
         super().on_finished(proc)
