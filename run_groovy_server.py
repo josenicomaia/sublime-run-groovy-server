@@ -43,19 +43,11 @@ class ExecRunGroovyCommand(Default.exec.ExecCommand):
         return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=tempfile.gettempdir(), delete=False)
 
     def __get_current_paragraph_contents(self):
-        paragraphs = []
+        text = []
 
         if self.view.sel():
             for region in self.view.sel():
-                paragraphs.append([region, expand_to_paragraph(self.view, region.b)])
-
-        text = []
-
-        for i in paragraphs:
-            region, paragraph = i
-            self.view.sel().subtract(region)
-            self.view.sel().add(paragraph)
-            text.append(self.view.substr(paragraph))
+                text.append(self.view.substr(expand_to_paragraph(self.view, region.b)))
 
         return '\n\n'.join(text)
 
