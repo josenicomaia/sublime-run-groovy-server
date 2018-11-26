@@ -37,7 +37,12 @@ class ExecRunGroovyCommand(Default.exec.ExecCommand):
 
         self.temp_file.write(bytes(contents, encoding))
         self.temp_file.close()
-        super().run(cmd=["groovyclient", self.temp_file.name], encoding=encoding, working_dir=working_dir)
+        super().run(cmd = [
+            'groovyclient',
+            '-c', encoding,
+            '-cp', '/home/josenicomaia/workspaces/josenicomaia/groovyserver/src/groovy:/home/josenicomaia/workspaces/josenicomaia/groovyserver/src/java',
+            self.temp_file.name
+        ], encoding=encoding, working_dir=working_dir)
 
     def __generate_temp_file(self):
         return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=tempfile.gettempdir(), delete=False)
