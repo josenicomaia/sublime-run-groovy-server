@@ -1,10 +1,8 @@
 import sublime
 import sublime_plugin
-import subprocess
 import os
 import tempfile
 import Default
-from Default.paragraph import expand_to_paragraph
 
 class RunGroovyCommand(sublime_plugin.WindowCommand):
     def run(self, current=False):
@@ -43,13 +41,20 @@ class ExecRunGroovyCommand(Default.exec.ExecCommand):
         return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=tempfile.gettempdir(), delete=False)
 
     def __get_current_paragraph_contents(self):
-        text = []
+        return self.view.substr(self.__get_current_paragraph_region())
+
+    def __get_current_paragraph_region(self):
+        text = self.view.substr(sublime.Region(0, self.view.size()))
 
         if self.view.sel():
-            for region in self.view.sel():
-                text.append(self.view.substr(expand_to_paragraph(self.view, region.b)))
+            region = self.view.sel()[0]
+            start = text.rfind('\n\n', 0, region.a + 1)
+            end = text.find('\n\n', region.a, len(text)) + 1
 
-        return '\n\n'.join(text)
+        start = 0 if start < 0 else start + 2
+        end = len(text) if end <= 0 else end
+
+        return sublime.Region(start, end)
 
     def __is_selection_available(self):
         if self.view.sel():
