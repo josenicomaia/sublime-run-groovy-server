@@ -38,7 +38,7 @@ class ExecRunGroovyCommand(Default.exec.ExecCommand):
         super().run(cmd=["groovyclient", self.temp_file.name], encoding=encoding, working_dir=working_dir)
 
     def __generate_temp_file(self):
-        return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs-', dir=tempfile.gettempdir(), delete=False)
+        return tempfile.NamedTemporaryFile(suffix='.groovy', prefix='gs', dir=tempfile.gettempdir(), delete=False)
 
     def __get_current_paragraph_contents(self):
         return self.view.substr(self.__get_current_paragraph_region())
